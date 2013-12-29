@@ -8,6 +8,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import android.app.ListActivity;
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -30,7 +33,7 @@ public class MainListActivity extends ListActivity {
 
 		if (isNetworkAvailable()) {
 			GetBlogPostsTask getBlogPostsTask = new GetBlogPostsTask();
-			getBlogPostsTask.execute();			
+			getBlogPostsTask.execute();					
 		} else {
 			Toast.makeText(this, "Network is unavailable!", Toast.LENGTH_LONG).show();
 		}
@@ -70,7 +73,21 @@ public class MainListActivity extends ListActivity {
 				
 				if (responseCode == HttpURLConnection.HTTP_OK) {
 					InputStream inputStream = connection.getInputStream();
-					Reader reader = new InputStreamReader(inputStream);					
+					Reader reader = new InputStreamReader(inputStream);		
+					int contentLength = connection.getContentLength();
+					char[] charArray = new char[contentLength];
+					reader.read(charArray);
+				    String responseData = new String(charArray);
+				    JSONObject jsonResponse = new JSONObject(responseData);
+				    String status = jsonResponse.getString("status");
+					Log.v(TAG, status);
+					JSONArray jsonPosts = jsonResponse.getJSONArray("posts");
+					
+					for (int i = 0; i < jsonPosts.length(); i++) {
+						JSONObject jsonPost = jsonPosts.getJSONObject(i);
+						String title = jsonPost.getString("title");
+						Log.v(TAG, "Post" + i + ": " + title);
+					}
 				} else {
 					Log.i(TAG, "Unsucessful HTTP Response Code: " +  responseCode);
 				}
